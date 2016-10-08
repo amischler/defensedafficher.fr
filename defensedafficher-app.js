@@ -269,7 +269,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 			// Load images
 			outlineImage.onload = resourceLoaded;
-			outlineImage.src = "images/defensedafficher1.jpg";
+			outlineImage.src = "images/defensedafficher" + Math.floor((Math.random() * 10) + 1) + ".jpg";
 		};
 
 	return {

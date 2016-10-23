@@ -58,6 +58,7 @@
             <version>2.1.0-2</version>
         </dependency>
 
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.wisdom-framework</groupId>
@@ -98,6 +99,39 @@
             <artifactId>documentation</artifactId>
             <version>0.9.1</version>
         </dependency>
+
+        <!-- wisdom-jcr -->
+        <dependency>
+            <groupId>org.wisdom-framework.jcr</groupId>
+            <artifactId>wisdom-jcr-core</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wisdom-framework.jcr</groupId>
+            <artifactId>wisdom-jcr-providers</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wisdom-framework.jcr</groupId>
+            <artifactId>wisdom-modeshape</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jcrom</groupId>
+            <artifactId>jcrom</artifactId>
+            <version>2.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tika</groupId>
+                    <artifactId>tika-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -109,6 +143,12 @@
                 <version>0.9.1</version>
                 <type>pom</type>
                 <scope>import</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -120,6 +160,20 @@
                 <artifactId>wisdom-maven-plugin</artifactId>
                 <version>0.9.1</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <libraries>
+                        <includes>
+                            <!-- wisdom-jcr -->
+                            <include>org.modeshape:modeshape-jcr</include>
+                            <include>joda-time:joda-time</include>
+                            <include>org.jcrom:jcrom</include>
+                            <include>org.apache.tika:tika-core</include>
+                            <!-- /wisdom-jcr -->
+                        </includes>
+                        <excludeFromApplication>true</excludeFromApplication>
+                    </libraries>
+                    <disableDistributionPackaging>true</disableDistributionPackaging>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -133,6 +187,9 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${basedir}/target/wisdom</additionalClasspathElement>
+                            </additionalClasspathElements>
                             <properties>
                                 <property>
                                     <name>listener</name>
@@ -145,6 +202,15 @@
             </plugin>
         </plugins>
     </build>
+
+
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.testSource>1.8</maven.compiler.testSource>
+        <maven.compiler.testTarget>1.8</maven.compiler.testTarget>
+    </properties>
+
 
     <repositories>
         <repository>

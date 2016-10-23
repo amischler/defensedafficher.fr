@@ -1,0 +1,5 @@
+<defensedafficher='http://www.defensedafficher.fr/jcr/defensedafficher'>
+
+[defensedafficher:wall] > nt:unstructured
+
+[defensedafficher:drawing] > nt:unstructured

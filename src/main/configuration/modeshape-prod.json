@@ -1,0 +1,8 @@
+{
+  "name": "repository-prod",
+  "node-types": ["conf/types.cnd"],
+  "storage": {
+    "cacheConfiguration": "conf/infinispan-prod.xml",
+    "cacheName": "persisted_repository"
+  }
+}

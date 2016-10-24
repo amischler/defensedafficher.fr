@@ -193,7 +193,7 @@ var drawingApp = (function () {
             drawing.color.push(curColor);
             drawing.size.push(curSize);
             drawing.drag.push(dragging);
-			postJSON('http://www.défensedafficher.fr/api/walls/' + wall.name, drawing).then(function(data) {
+			postJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wall.name, drawing).then(function(data) {
                 wall = data;
                 }, function(status) { //error detection....
                  alert('Unable to post drawing data.');
@@ -319,7 +319,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 			//var wallId = Math.floor((Math.random() * 10) + 1);
 			var wallId = 1;
 			outlineImage.src = "assets/images/defensedafficher" + wallId + ".jpg";
-			getJSON('http://www.défensedafficher.fr/api/walls/' + wallId).then(function(data) {
+			getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId).then(function(data) {
                 wall = data;
                 var i;
                 for (i = 0; i < data.drawings.length; i += 1) {

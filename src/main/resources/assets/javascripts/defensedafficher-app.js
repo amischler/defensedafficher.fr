@@ -45,8 +45,6 @@ var drawingApp = (function () {
 		drawingAreaY = 0,
 		drawingAreaWidth = window.innerWidth,
 		drawingAreaHeight = window.innerHeight,
-		totalLoadResources = 1,
-		curLoadResNum = 0,
 		sizeHotspotWidthObject = {
 			huge: 39,
 			large: 25,
@@ -54,6 +52,7 @@ var drawingApp = (function () {
 			small: 16
 		},
 		wall,
+		wallId,
 		drawing,
 
 		// Execute request and receive response as JSON
@@ -104,12 +103,6 @@ var drawingApp = (function () {
 				radius,
 				i,
 				selected;
-
-
-			// Make sure required resources are loaded before redrawing
-			if (curLoadResNum < totalLoadResources) {
-				return;
-			}
 
 			clearCanvas();
 
@@ -193,11 +186,6 @@ var drawingApp = (function () {
             drawing.color.push(curColor);
             drawing.size.push(curSize);
             drawing.drag.push(dragging);
-			postJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wall.name, drawing).then(function(data) {
-                wall = data;
-                }, function(status) { //error detection....
-                 alert('Unable to post drawing data.');
-            });;
 		},
 
 		// Add mouse and touch event listeners to the canvas
@@ -268,6 +256,11 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 			release = function () {
 				paint = false;
+				postJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wall.name, drawing).then(function(data) {
+                                wall = data;
+                                }, function(status) { //error detection....
+                                 alert('Unable to post drawing data.');
+                            });
 				redraw();
 			},
 
@@ -290,12 +283,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 		// Calls the redraw function after all neccessary resources are loaded.
 		resourceLoaded = function () {
-
-			curLoadResNum += 1;
-			if (curLoadResNum === totalLoadResources) {
-				redraw();
-				createUserEvents();
-			}
+		    redraw();
 		},
 
 		// Creates a canvas element, loads images, adds events, and draws the canvas for the first time.
@@ -316,36 +304,68 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 			// Load images
 			outlineImage.onload = resourceLoaded;
-			//var wallId = Math.floor((Math.random() * 10) + 1);
-			var wallId = 1;
-			outlineImage.src = "assets/images/defensedafficher" + wallId + ".jpg";
-			getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId).then(function(data) {
-                wall = data;
-                var i;
-                for (i = 0; i < data.drawings.length; i += 1) {
-                    clickX = clickX.concat(data.drawings[i].x);
-                    clickY = clickY.concat(data.drawings[i].y);
-                    clickColor = clickColor.concat(data.drawings[i].color);
-                    clickSize = clickSize.concat(data.drawings[i].size);
-                    clickDrag = clickDrag.concat(data.drawings[i].drag);
-                    clickTool = clickTool.concat(data.drawings[i].tool);
-                }
-                drawing = new Object();
-                drawing.x =  [];
-                drawing.y = [];
-                drawing.color = [];
-                drawing.size = [];
-                drawing.drag = [];
-                drawing.tool = [];
-                drawing.name = Date.now();
-                wall.drawings.push(drawing);
-                redraw();
-            }, function(status) { //error detection....
-              alert('Unable to load wall data.');
-            });
+			wallId = 1;
+			loadImage();
+			createUserEvents();
+		},
+
+		loadImage = function() {
+		    outlineImage.src = "assets/images/defensedafficher" + wallId + ".jpg";
+        			getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId).then(function(data) {
+                        wall = data;
+                        clickX = [];
+                        clickY = [];
+                        clickColor = [];
+                        clickTool = [];
+                        clickSize = [];
+                        clickDrag = [];
+                        var i;
+                        for (i = 0; i < data.drawings.length; i += 1) {
+                            clickX = clickX.concat(data.drawings[i].x);
+                            clickY = clickY.concat(data.drawings[i].y);
+                            clickColor = clickColor.concat(data.drawings[i].color);
+                            clickSize = clickSize.concat(data.drawings[i].size);
+                            clickDrag = clickDrag.concat(data.drawings[i].drag);
+                            clickTool = clickTool.concat(data.drawings[i].tool);
+                        };
+                        drawing = new Object();
+                        drawing.x =  [];
+                        drawing.y = [];
+                        drawing.color = [];
+                        drawing.size = [];
+                        drawing.drag = [];
+                        drawing.tool = [];
+                        drawing.name = Date.now();
+                        wall.drawings.push(drawing);
+                        redraw();
+                    }, function(status) { //error detection....
+                      alert('Unable to load wall data.');
+                    });
+		},
+
+		previous = function() {
+		    if (wallId == 1) {
+		        wallId = 10;
+		    } else {
+		        wallId = wallId - 1;
+		    }
+            loadImage();
+		},
+
+		next = function() {
+		    if (wallId == 10) {
+		        wallId = 1;
+		    } else {
+		        wallId = wallId + 1;
+		    }
+		    loadImage();
 		};
 
-	return {
-		init: init
-	};
+
+    var obj = {
+        init: init,
+        previous: previous,
+        next: next
+    };
+	return obj;
 }());

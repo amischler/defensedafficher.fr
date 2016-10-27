@@ -15,7 +15,7 @@
 /*jslint browser: true */
 /*global G_vmlCanvasManager */
 
-var drawingApp = (function () {
+var app = (function () {
 
 	"use strict";
 
@@ -23,14 +23,7 @@ var drawingApp = (function () {
 		context,
 		canvasWidth = window.innerWidth,
 		canvasHeight = window.innerHeight,
-		colorPurple = "#cb3594",
-		colorGreen = "#659b41",
-		colorYellow = "#ffcf33",
-		colorBrown = "#986928",
 		outlineImage = new Image(),
-		crayonImage = new Image(),
-		markerImage = new Image(),
-		eraserImage = new Image(),
 		clickX = [],
 		clickY = [],
 		clickColor = [],
@@ -38,19 +31,13 @@ var drawingApp = (function () {
 		clickSize = [],
 		clickDrag = [],
 		paint = false,
-		curColor = colorPurple,
+		curColor = "#cb3594",
 		curTool = "marker",
 		curSize = "normal",
 		drawingAreaX = 0,
 		drawingAreaY = 0,
 		drawingAreaWidth = window.innerWidth,
 		drawingAreaHeight = window.innerHeight,
-		sizeHotspotWidthObject = {
-			huge: 39,
-			large: 25,
-			normal: 18,
-			small: 16
-		},
 		wall,
 		wallId,
 		drawing,
@@ -147,17 +134,11 @@ var drawingApp = (function () {
 				}
 				context.lineTo(clickX[i], clickY[i]);
 				
-				// Set the drawing color
-				if (clickTool[i] === "eraser") {
-					//context.globalCompositeOperation = "destination-out"; // To erase instead of draw over with white
-					context.strokeStyle = 'white';
-				} else {
-					//context.globalCompositeOperation = "source-over";	// To erase instead of draw over with white
-					context.strokeStyle = clickColor[i];
-				}
+				context.strokeStyle = clickColor[i];
 				context.lineCap = "round";
 				context.lineJoin = "round";
 				context.lineWidth = radius;
+				context.globalAlpha = 0.25;
 				context.stroke();
 			}
 			context.closePath();
@@ -196,46 +177,6 @@ var drawingApp = (function () {
 				var sizeHotspotStartX,
 					mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
 mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
-
-				if (mouseX < drawingAreaX) { // Left of the drawing area
-					if (mouseX > mediumStartX) {
-						if (mouseY > mediumStartY && mouseY < mediumStartY + mediumImageHeight) {
-							curColor = colorPurple;
-						} else if (mouseY > mediumStartY + mediumImageHeight && mouseY < mediumStartY + mediumImageHeight * 2) {
-							curColor = colorGreen;
-						} else if (mouseY > mediumStartY + mediumImageHeight * 2 && mouseY < mediumStartY + mediumImageHeight * 3) {
-							curColor = colorYellow;
-						} else if (mouseY > mediumStartY + mediumImageHeight * 3 && mouseY < mediumStartY + mediumImageHeight * 4) {
-							curColor = colorBrown;
-						}
-					}
-				} else if (mouseX > drawingAreaX + drawingAreaWidth) { // Right of the drawing area
-
-					if (mouseY > toolHotspotStartY) {
-						if (mouseY > sizeHotspotStartY) {
-							sizeHotspotStartX = drawingAreaX + drawingAreaWidth;
-							if (mouseY < sizeHotspotStartY + sizeHotspotHeight && mouseX > sizeHotspotStartX) {
-								if (mouseX < sizeHotspotStartX + sizeHotspotWidthObject.huge) {
-									curSize = "huge";
-								} else if (mouseX < sizeHotspotStartX + sizeHotspotWidthObject.large + sizeHotspotWidthObject.huge) {
-									curSize = "large";
-								} else if (mouseX < sizeHotspotStartX + sizeHotspotWidthObject.normal + sizeHotspotWidthObject.large + sizeHotspotWidthObject.huge) {
-									curSize = "normal";
-								} else if (mouseX < sizeHotspotStartX + sizeHotspotWidthObject.small + sizeHotspotWidthObject.normal + sizeHotspotWidthObject.large + sizeHotspotWidthObject.huge) {
-									curSize = "small";
-								}
-							}
-						} else {
-							if (mouseY < toolHotspotStartY + toolHotspotHeight) {
-								curTool = "crayon";
-							} else if (mouseY < toolHotspotStartY + toolHotspotHeight * 2) {
-								curTool = "marker";
-							} else if (mouseY < toolHotspotStartY + toolHotspotHeight * 3) {
-								curTool = "eraser";
-							}
-						}
-					}
-				}
 				paint = true;
 				addClick(mouseX, mouseY, false);
 				redraw();
@@ -359,13 +300,23 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		        wallId = wallId + 1;
 		    }
 		    loadImage();
+		},
+
+		setColor = function(color) {
+            curColor = color;
+		},
+
+		setSize = function(size) {
+		    curSize = size;
 		};
 
 
     var obj = {
         init: init,
         previous: previous,
-        next: next
+        next: next,
+        setColor: setColor,
+        setSize: setSize
     };
 	return obj;
 }());

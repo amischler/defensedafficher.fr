@@ -2,15 +2,24 @@
 <html>
 <head>
     <title>defensedafficher.fr</title>
+    <link rel="stylesheet" href="/libs/css/bootstrap.css" media="screen"/>
     <link rel="stylesheet" href="/assets/css/styles.css"/>
 </head>
 <body id="body">
 <div id="container">
     <div id="canvasDiv">
     </div>
-    <div id="controls">
-        <button type="button" onclick="previous()">Previous</button>
-        <button type="button" onclick="next()">Next</button>
+    <div id="tools">
+        <button id="purpleButton" class="btn colorButton" type="button" onclick="app.setColor('#cb3594')"></button>
+        <button id="greenButton" class="btn colorButton" type="button" onclick="app.setColor('#659b41')"></button>
+        <button id="yellowButton" class="btn colorButton" type="button" onclick="app.setColor('#ffcf33')"></button>
+        <button id="brownButton" class="btn colorButton" type="button" onclick="app.setColor('#986928')"></button>
+        <button id="smallButton" class="btn sizeButton" type="button" onclick="app.setSize('small')"><span class="glyphicon glyphicon-tint tint-small"></span></button>
+        <button id="normalButton" class="btn sizeButton" type="button" onclick="app.setSize('normal')"><span class="glyphicon glyphicon-tint tint-normal"></span></button>
+        <button id="largeButton" class="btn sizeButton" type="button" onclick="app.setSize('large')"><span class="glyphicon glyphicon-tint tint-large"></span></button>
+        <button id="hugeButton" class="btn sizeButton" type="button" onclick="app.setSize('huge')"><span class="glyphicon glyphicon-tint "></span></button>
+        <button type="button" class="btn" onclick="app.previous()"><span class="glyphicon glyphicon-step-backward"></span></button>
+        <button type="button" class="btn" onclick="app.next()"><span class="glyphicon glyphicon-step-forward"></span></button>
     </div>
 </div>
 
@@ -18,15 +27,7 @@
 <script type="text/javascript" src="/assets/javascripts/excanvas.js"></script><![endif]-->
 <script type="text/javascript" src="/assets/javascripts/defensedafficher-app.js"></script>
 <script type="text/javascript">
-    	 drawingApp.init();
-    	 function next() {
-    	    drawingApp.next();
-    	 };
-    	 function previous() {
-    	    drawingApp.previous();
-    	 };
-
-
+    	 app.init();
 </script>
 </body>
 </html>

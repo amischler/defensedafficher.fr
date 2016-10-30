@@ -63,23 +63,24 @@ var app = (function () {
             xhr.send();
           });
         },
+
         postJSON = function(url, data) {
-                  return new Promise(function(resolve, reject) {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('post', url, true);
-                    xhr.responseType = 'json';
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.onload = function() {
-                      var status = xhr.status;
-                      if (status == 200) {
+            return new Promise(function(resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('post', url, true);
+                xhr.responseType = 'json';
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function() {
+                    var status = xhr.status;
+                    if (status == 200) {
                         resolve(xhr.response);
-                      } else {
+                    } else {
                         reject(status);
-                      }
-                    };
-                    xhr.send(JSON.stringify(data));
-                  });
-                },
+                    }
+                };
+                xhr.send(JSON.stringify(data));
+            });
+        },
 
 		// Clears the canvas.
 		clearCanvas = function () {
@@ -258,12 +259,19 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		},
 
 		resize = function () {
+		    clearRendering();
 		    updateTransformations();
 		    render();
 		},
 
+		clearRendering = function() {
+		    rendering.background = false;
+		    rendering.drawings = [];
+		},
+
 		// Calls the render function after all neccessary resources are loaded.
 		resourceLoaded = function () {
+		    clearRendering();
 		    render();
 		},
 
@@ -292,21 +300,23 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 		loadImage = function() {
 		    image.src = "assets/images/defensedafficher" + wallId + ".jpg";
-        			getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId).then(function(data) {
-                        wall = data;
-                        drawing = new Object();
-                        drawing.x =  [];
-                        drawing.y = [];
-                        drawing.color = [];
-                        drawing.size = [];
-                        drawing.drag = [];
-                        drawing.tool = [];
-                        drawing.name = Date.now();
-                        wall.drawings.push(drawing);
-                        render();
-                    }, function(status) { //error detection....
-                      alert('Unable to load wall data.');
-                    });
+        	getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId)
+        	    .then(function(data) {
+                    wall = data;
+                    drawing = new Object();
+                    drawing.x =  [];
+                    drawing.y = [];
+                    drawing.color = [];
+                    drawing.size = [];
+                    drawing.drag = [];
+                    drawing.tool = [];
+                    drawing.name = Date.now();
+                    wall.drawings.push(drawing);
+                    clearRendering();
+                    render();
+                }, function(status) { //error detection....
+                    alert('Unable to load wall data.');
+                });
 		},
 
 		previous = function() {
@@ -334,7 +344,6 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		setSize = function(size) {
 		    curSize = size;
 		};
-
 
     var obj = {
         init: init,

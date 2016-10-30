@@ -23,13 +23,7 @@ var app = (function () {
 		context,
 		canvasWidth = window.innerWidth,
 		canvasHeight = window.innerHeight,
-		outlineImage = new Image(),
-		clickX = [],
-		clickY = [],
-		clickColor = [],
-		clickTool = [],
-		clickSize = [],
-		clickDrag = [],
+		image = new Image(),
 		paint = false,
 		curColor = "#cb3594",
 		curTool = "marker",
@@ -39,8 +33,18 @@ var app = (function () {
 		drawingAreaWidth = window.innerWidth,
 		drawingAreaHeight = window.innerHeight,
 		wall,
-		wallId,
 		drawing,
+		wallId,
+		rx,
+        ry,
+        drawImageWidth,
+        drawImageHeight,
+        tx,
+        ty,
+        rendering = {
+            background: false,
+            drawings: []
+        },
 
 		// Execute request and receive response as JSON
 		getJSON = function(url) {
@@ -82,71 +86,107 @@ var app = (function () {
 			context.clearRect(0, 0, canvasWidth, canvasHeight);
 		},
 
-		// Redraws the canvas.
-		redraw = function () {
+		updateTransformations = function() {
+		    drawingAreaWidth = window.innerWidth;
+            drawingAreaHeight = window.innerHeight;
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.setAttribute('width', canvasWidth);
+            canvas.setAttribute('height', canvasHeight);
+		    rx = drawingAreaWidth / image.width;
+            ry = drawingAreaHeight / image.height;
+            if (image.height * rx < drawingAreaHeight) {
+                drawImageWidth = image.width * ry;
+                drawImageHeight = drawingAreaHeight;
+                rx = drawImageWidth / image.width;
+                tx = - (image.width * rx - drawingAreaWidth) / 2;
+                ty = - (image.height * ry - drawingAreaHeight) / 2;
+            } else {
+                drawImageWidth = drawingAreaWidth;
+                drawImageHeight = image.height * rx;
+                ry = drawImageHeight / image.height
+                tx = - (image.width * rx - drawingAreaWidth) / 2;
+                ty = - (image.height * ry - drawingAreaHeight) / 2;
+            }
+		},
+
+		// Render the canvas.
+		render = function () {
 
 			var locX,
 				locY,
 				radius,
 				i,
+				j,
 				selected;
 
-			clearCanvas();
+            if (!rendering.background) {
+                context.globalAlpha = 1;
+			    clearCanvas();
+			    // Draw the background image
+                context.drawImage(image, drawingAreaX + tx, drawingAreaY + ty, drawImageWidth, drawImageHeight);
+			    rendering.background = true;
+			}
 
-			// Draw the outline image
-            context.drawImage(outlineImage, drawingAreaX, drawingAreaY, drawingAreaWidth, drawingAreaHeight);
-
+			if (wall == null) {
+                return;
+            }
 			// Keep the drawing in the drawing area
 			context.save();
 			context.beginPath();
 			context.rect(drawingAreaX, drawingAreaY, drawingAreaWidth, drawingAreaHeight);
 			context.clip();
 
-			// For each point drawn
-			for (i = 0; i < clickX.length; i += 1) {
-
-				// Set the drawing radius
-				switch (clickSize[i]) {
-				case "small":
-					radius = 2;
-					break;
-				case "normal":
-					radius = 5;
-					break;
-				case "large":
-					radius = 10;
-					break;
-				case "huge":
-					radius = 20;
-					break;
-				default:
-					break;
+			// For each wall drawing drawn
+			for (i = 0; i < wall.drawings.length; i += 1) {
+			    var d = wall.drawings[i];
+			    var r = rendering.drawings[i];
+			    if (!r) {
+			        r = [];
+			        rendering.drawings.push(r);
+			    }
+                for (j = 0; j < d.x.length; j += 1)
+                {
+				    if (!r || !r[j]) {
+                        // Set the drawing radius
+                        switch (d.size[j]) {
+                            case "small":
+                                radius = 2;
+                                break;
+                            case "normal":
+                                radius = 5;
+                                break;
+                            case "large":
+                                radius = 10;
+                                break;
+                            case "huge":
+                                radius = 20;
+                                break;
+                            default:
+                                break;
+                        }
+                        // Set the drawing path
+                        context.beginPath();
+                        // If dragging then draw a line between the two points
+                        if (d.drag[j] && j) {
+                            context.moveTo(d.x[j - 1] * rx + tx, d.y[j - 1] * ry + ty);
+                        } else {
+                            // The x position is moved over one pixel so a circle even if not dragging
+                            context.moveTo(d.x[j] * rx - 1 + tx, d.y[j] * ry + ty);
+                        }
+                        context.lineTo(d.x[j] * rx + tx, d.y[j] * ry + ty);
+                        context.strokeStyle = d.color[j];
+                        context.lineCap = "round";
+                        context.lineJoin = "round";
+                        context.lineWidth = radius;
+                        context.globalAlpha = 0.25;
+                        context.stroke();
+                        r.push(true);
+                    }
 				}
-
-				// Set the drawing path
-				context.beginPath();
-				// If dragging then draw a line between the two points
-				if (clickDrag[i] && i) {
-					context.moveTo(clickX[i - 1], clickY[i - 1]);
-				} else {
-					// The x position is moved over one pixel so a circle even if not dragging
-					context.moveTo(clickX[i] - 1, clickY[i]);
-				}
-				context.lineTo(clickX[i], clickY[i]);
-				
-				context.strokeStyle = clickColor[i];
-				context.lineCap = "round";
-				context.lineJoin = "round";
-				context.lineWidth = radius;
-				context.globalAlpha = 0.25;
-				context.stroke();
 			}
 			context.closePath();
-			//context.globalCompositeOperation = "source-over";// To erase instead of draw over with white
 			context.restore();
-
-			context.globalAlpha = 1; // No IE support
-
 		},
 
 		// Adds a point to the drawing array.
@@ -154,15 +194,8 @@ var app = (function () {
 		// @param y
 		// @param dragging
 		addClick = function (x, y, dragging) {
-
-			clickX.push(x);
-			clickY.push(y);
-			clickTool.push(curTool);
-			clickColor.push(curColor);
-			clickSize.push(curSize);
-			clickDrag.push(dragging);
-			drawing.x.push(x);
-            drawing.y.push(y);
+			drawing.x.push((x - tx) / rx);
+            drawing.y.push((y - ty) / ry);
             drawing.tool.push(curTool);
             drawing.color.push(curColor);
             drawing.size.push(curSize);
@@ -174,12 +207,11 @@ var app = (function () {
 
 			var press = function (e) {
 				// Mouse down location
-				var sizeHotspotStartX,
-					mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
+				var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
 mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 				paint = true;
 				addClick(mouseX, mouseY, false);
-				redraw();
+				render();
 			},
 
 			drag = function (e) {
@@ -189,7 +221,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 				
 				if (paint) {
 					addClick(mouseX, mouseY, true);
-					redraw();
+					render();
 				}
 				// Prevent the whole page from dragging if on mobile
 				e.preventDefault();
@@ -198,11 +230,11 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 			release = function () {
 				paint = false;
 				postJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wall.name, drawing).then(function(data) {
-                                wall = data;
+                                //wall = data;
                                 }, function(status) { //error detection....
                                  alert('Unable to post drawing data.');
                             });
-				redraw();
+				render();
 			},
 
 			cancel = function () {
@@ -220,16 +252,23 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 			canvas.addEventListener("touchmove", drag, false);
 			canvas.addEventListener("touchend", release, false);
 			canvas.addEventListener("touchcancel", cancel, false);
+
+			// Add window resize event handler
+			window.addEventListener("resize", resize, false);
 		},
 
-		// Calls the redraw function after all neccessary resources are loaded.
+		resize = function () {
+		    updateTransformations();
+		    render();
+		},
+
+		// Calls the render function after all neccessary resources are loaded.
 		resourceLoaded = function () {
-		    redraw();
+		    render();
 		},
 
 		// Creates a canvas element, loads images, adds events, and draws the canvas for the first time.
 		init = function () {
-
 			// Create the canvas (Neccessary for IE because it doesn't know what a canvas element is)
 			canvas = document.createElement('canvas');
 			canvas.setAttribute('width', canvasWidth);
@@ -244,31 +283,17 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 			//     context = document.getElementById('canvas').getContext("2d");
 
 			// Load images
-			outlineImage.onload = resourceLoaded;
+			image.onload = resourceLoaded;
 			wallId = 1;
 			loadImage();
 			createUserEvents();
+			resize();
 		},
 
 		loadImage = function() {
-		    outlineImage.src = "assets/images/defensedafficher" + wallId + ".jpg";
+		    image.src = "assets/images/defensedafficher" + wallId + ".jpg";
         			getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId).then(function(data) {
                         wall = data;
-                        clickX = [];
-                        clickY = [];
-                        clickColor = [];
-                        clickTool = [];
-                        clickSize = [];
-                        clickDrag = [];
-                        var i;
-                        for (i = 0; i < data.drawings.length; i += 1) {
-                            clickX = clickX.concat(data.drawings[i].x);
-                            clickY = clickY.concat(data.drawings[i].y);
-                            clickColor = clickColor.concat(data.drawings[i].color);
-                            clickSize = clickSize.concat(data.drawings[i].size);
-                            clickDrag = clickDrag.concat(data.drawings[i].drag);
-                            clickTool = clickTool.concat(data.drawings[i].tool);
-                        };
                         drawing = new Object();
                         drawing.x =  [];
                         drawing.y = [];
@@ -278,7 +303,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
                         drawing.tool = [];
                         drawing.name = Date.now();
                         wall.drawings.push(drawing);
-                        redraw();
+                        render();
                     }, function(status) { //error detection....
                       alert('Unable to load wall data.');
                     });

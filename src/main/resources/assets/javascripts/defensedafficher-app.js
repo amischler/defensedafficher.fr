@@ -307,7 +307,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
                 d.size = [];
                 d.drag = [];
                 d.tool = [];
-                d.name = Date.now();
+                d.name = point.name;
                 wall.drawings.push(d);
             }
             d.x.push(point.x);

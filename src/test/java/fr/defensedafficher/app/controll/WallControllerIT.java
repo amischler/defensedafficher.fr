@@ -26,9 +26,9 @@ public class WallControllerIT extends WisdomBlackBoxTest {
         assertThat(response.body().get("name").asText()).isEqualTo("wall1");
         assertThat(response.body().get("drawings").size()).isEqualTo(0);
         // test creation of a new drawing
-        String body = "{\"name\":\"drawing1\",\"x\":[1, 2],\"y\":[2,1],\"color\":[\"red\", \"red\"],\"size\":[\"normal\",\"normal\"],\"drag\":[true, false]}";
+        String body = "{\"x\": 1,\"y\": 2,\"color\": \"red\",\"size\": \"normal\", \"drag\": true}";
         logger.info("Creating drawing " + body);
-        HttpResponse<JsonNode> response2 = post("/api/walls/wall1").header("Content-Type", "application/json").body(body).asJson();
+        HttpResponse<JsonNode> response2 = post("ws:///localhost:9000/api/socket/wall1/drawing1").header("Content-Type", "application/json").body(body).asJson();
         assertThat(response2.code()).isEqualTo(OK);
         logger.info("Received wall : " + response2.body().toString());
         assertThat(response2.body().get("name").asText()).isEqualTo("wall1");
@@ -38,7 +38,7 @@ public class WallControllerIT extends WisdomBlackBoxTest {
         assertThat(response2.body().get("drawings").get(0).get("x").get(1).asInt()).isEqualTo(2);
         // test update of an existing drawing
         String body2 = "{\"name\":\"drawing1\",\"x\":[1, 2, 3],\"y\":[2, 1, 0],\"color\":[\"red\", \"red\", \"red\"],\"size\":[\"normal\",\"normal\", \"normal\"],\"drag\":[true, false, true]}";
-        HttpResponse<JsonNode> response3 = post("/api/walls/wall1").header("Content-Type", "application/json").body(body2).asJson();
+        HttpResponse<JsonNode> response3 = post("ws://localhost:9000/api/walls/wall1").header("Content-Type", "application/json").body(body2).asJson();
         assertThat(response3.code()).isEqualTo(OK);
         logger.info("Received wall : " + response3.body().toString());
         assertThat(response3.body().get("name").asText()).isEqualTo("wall1");

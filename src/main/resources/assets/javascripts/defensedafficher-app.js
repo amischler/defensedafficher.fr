@@ -45,6 +45,7 @@ var app = (function () {
             background: false,
             drawings: []
         },
+        socket,
 
 		// Execute request and receive response as JSON
 		getJSON = function(url) {
@@ -195,12 +196,23 @@ var app = (function () {
 		// @param y
 		// @param dragging
 		addClick = function (x, y, dragging) {
-			drawing.x.push((x - tx) / rx);
-            drawing.y.push((y - ty) / ry);
+		    var imageX = (x - tx) / rx;
+		    var imageY = (y - ty) / ry;
+			drawing.x.push(imageX);
+            drawing.y.push(imageY);
             drawing.tool.push(curTool);
             drawing.color.push(curColor);
             drawing.size.push(curSize);
             drawing.drag.push(dragging);
+            send({
+                x: imageX,
+                y: imageY,
+                tool: curTool,
+                color: curColor,
+                size: curSize,
+                drag: dragging,
+                name: drawing.name
+            });
 		},
 
 		// Add mouse and touch event listeners to the canvas
@@ -230,11 +242,6 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 			release = function () {
 				paint = false;
-				postJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wall.name, drawing).then(function(data) {
-                                //wall = data;
-                                }, function(status) { //error detection....
-                                 alert('Unable to post drawing data.');
-                            });
 				render();
 			},
 
@@ -275,6 +282,68 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		    render();
 		},
 
+	    onopen = function(event) {
+            console.log("Connected to the Draw WebSocket")
+        },
+
+        onmessage = function(event) {
+            console.log("Received data : " + event.data);
+            var point = JSON.parse(event.data);
+            var i;
+            var d;
+            if (point.name == drawing.name) {
+                return;
+            }
+            for (i = 0; i < wall.drawings.length; i += 1) {
+                if (wall.drawings[i].name == point.name) {
+                    d = wall.drawings[i];
+                }
+            }
+            if (!d) {
+                d = new Object();
+                d.x =  [];
+                d.y = [];
+                d.color = [];
+                d.size = [];
+                d.drag = [];
+                d.tool = [];
+                d.name = Date.now();
+                wall.drawings.push(d);
+            }
+            d.x.push(point.x);
+            d.y.push(point.y);
+            d.tool.push(point.tool);
+            d.size.push(point.size);
+            d.drag.push(point.drag);
+            d.color.push(point.color);
+            render();
+        },
+
+        onclose = function(event) {
+            console.log("Disconnected from the Draw WebSocket")
+        },
+
+		createSocket = function() {
+		    if (!window.WebSocket) {
+                window.WebSocket = window.MozWebSocket;
+            }
+            if (window.WebSocket) {
+            // Compute the web socket url.
+            // window.location.host includes the port
+            var url = "ws://" + window.location.host + '/draw/' + wallId;
+            socket = new WebSocket(url);
+                socket.onopen = onopen;
+                socket.onmessage = onmessage;
+                socket.onclose = onclose;
+            } else {
+                alert("Your browser does not support Web Socket.");
+            }
+		},
+
+		send = function(point) {
+        	socket.send(JSON.stringify(point));
+        },
+
 		// Creates a canvas element, loads images, adds events, and draws the canvas for the first time.
 		init = function () {
 			// Create the canvas (Neccessary for IE because it doesn't know what a canvas element is)
@@ -311,6 +380,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
                     drawing.drag = [];
                     drawing.tool = [];
                     drawing.name = Date.now();
+                    createSocket();
                     wall.drawings.push(drawing);
                     clearRendering();
                     render();

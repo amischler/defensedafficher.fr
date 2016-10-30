@@ -3,8 +3,11 @@ package fr.defensedafficher.app.model;
 import org.jcrom.AbstractJcrEntity;
 import org.jcrom.annotations.JcrNode;
 import org.jcrom.annotations.JcrProperty;
+import scala.Int;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by antoine on 12/10/2016.
@@ -13,81 +16,69 @@ import java.util.Arrays;
 public class Drawing extends AbstractJcrEntity {
 
     @JcrProperty
-    private int[] x;
+    private List<Integer> x = new ArrayList<>();
 
     @JcrProperty
-    private int[] y;
+    private List<Integer> y = new ArrayList<>();
 
     @JcrProperty
-    private String[] size;
+    private List<String> size = new ArrayList<>();
 
     @JcrProperty
-    private boolean[] drag;
+    private List<Boolean> drag = new ArrayList<>();
 
     @JcrProperty
-    private String[] color;
+    private List<String> color = new ArrayList<>();
 
     @JcrProperty
-    private String[] tool;
+    private List<String> tool = new ArrayList<>();
 
-    public int[] getX() {
+    public List<Integer> getX() {
         return x;
     }
 
-    public void setX(int[] x) {
+    public void setX(List<Integer> x) {
         this.x = x;
     }
 
-    public int[] getY() {
+    public List<Integer> getY() {
         return y;
     }
 
-    public void setY(int[] y) {
+    public void setY(List<Integer> y) {
         this.y = y;
     }
 
-    public String[] getSize() {
+    public List<String> getSize() {
         return size;
     }
 
-    public void setSize(String[] size) {
+    public void setSize(List<String> size) {
         this.size = size;
     }
 
-    public boolean[] getDrag() {
+    public List<Boolean> getDrag() {
         return drag;
     }
 
-    public void setDrag(boolean[] drag) {
+    public void setDrag(List<Boolean> drag) {
         this.drag = drag;
     }
 
-    public String[] getColor() {
+    public List<String> getColor() {
         return color;
     }
 
-    public void setColor(String[] color) {
+    public void setColor(List<String> color) {
         this.color = color;
     }
 
-    public String[] getTool() {
+    public List<String> getTool() {
         return tool;
     }
 
-    public void setTool(String[] tool) {
+    public void setTool(List<String> tool) {
         this.tool = tool;
-    }
-
-    @Override
-    public String toString() {
-        return "Drawing{" +
-                "x=" + Arrays.toString(x) +
-                ", y=" + Arrays.toString(y) +
-                ", size=" + Arrays.toString(size) +
-                ", drag=" + Arrays.toString(drag) +
-                ", color=" + Arrays.toString(color) +
-                ", tool=" + Arrays.toString(tool) +
-                '}';
     }
 
 }

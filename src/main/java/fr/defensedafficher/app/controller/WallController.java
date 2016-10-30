@@ -2,10 +2,13 @@ package fr.defensedafficher.app.controller;
 
 import fr.defensedafficher.app.model.Drawing;
 import fr.defensedafficher.app.model.Wall;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.wisdom.api.DefaultController;
 import org.wisdom.api.annotations.*;
+import org.wisdom.api.content.Json;
 import org.wisdom.api.http.HttpMethod;
 import org.wisdom.api.http.Result;
+import org.wisdom.api.http.websockets.Publisher;
 import org.wisdom.api.model.Crud;
 
 import javax.validation.Valid;
@@ -16,6 +19,113 @@ import java.util.Optional;
  */
 @Controller
 public class WallController extends DefaultController {
+
+    public static class Point {
+
+        public Point() {
+        }
+
+        public Point(String name, int x, int y, String size, boolean drag, String color, String tool) {
+            this.name = name;
+
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.drag = drag;
+            this.color = color;
+            this.tool = tool;
+        }
+
+        private String name;
+
+        protected int x;
+
+        protected int y;
+
+        protected String size;
+
+        protected boolean drag;
+
+        protected String color;
+
+        protected String tool;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public String getSize() {
+            return size;
+        }
+
+        public void setSize(String size) {
+            this.size = size;
+        }
+
+        public boolean isDrag() {
+            return drag;
+        }
+
+        public void setDrag(boolean drag) {
+            this.drag = drag;
+        }
+
+        public String getColor() {
+            return color;
+        }
+
+        public void setColor(String color) {
+            this.color = color;
+        }
+
+        public String getTool() {
+            return tool;
+        }
+
+        public void setTool(String tool) {
+            this.tool = tool;
+        }
+
+        @Override
+        public String toString() {
+            return "Point{" +
+                    "name='" + name + '\'' +
+                    ", x=" + x +
+                    ", y=" + y +
+                    ", size='" + size + '\'' +
+                    ", drag=" + drag +
+                    ", color='" + color + '\'' +
+                    ", tool='" + tool + '\'' +
+                    '}';
+        }
+
+    }
+
+    @Requires
+    Publisher publisher;
+
+    @Requires
+    Json json;
 
     @Model(Wall.class)
     private Crud<Wall, String> wallCrud;
@@ -29,32 +139,35 @@ public class WallController extends DefaultController {
         return ok(wall).json();
     }
 
-    @Route(method = HttpMethod.POST, uri = "/api/walls/{wallId}", accepts = "application/json")
-    public Result updateDrawing(@Parameter("wallId") final String wallId, @Valid @Body final Drawing drawing) {
-        logger().info("Update drawing for wall " + wallId);
-        logger().info("Received drawing : " + drawing);
+    @OnMessage("/draw/{wallId}")
+    public void onAddPoint(@Parameter("wallId") final String wallId,
+                           @Valid @Body final Point point) {
+        logger().info("Point received for drawing {} : {}", point);
         Wall wall = wallCrud.findOne(wallId);
         Optional<Drawing> existingDrawing = wall.getDrawings()
                 .stream()
-                .filter(d -> d.getName().equals(drawing.getName()))
+                .filter(d -> d.getName().equals(point.getName()))
                 .findFirst();
         if (existingDrawing.isPresent()) {
-            logger().info("Drawing already exist, updating existing drawing");
-            updateDrawingData(existingDrawing.get(), drawing);
+            updateDrawingData(existingDrawing.get(), point);
         } else {
             logger().info("Drawing does not exist, adding new drawing to wall");
+            Drawing drawing = new Drawing();
+            drawing.setName(point.getName());
+            updateDrawingData(drawing, point);
             wall.getDrawings().add(drawing);
         }
-        wall = wallCrud.save(wall);
-        return ok(wall).json();
+        publisher.publish("/draw/" + wallId, json.toJson(point));
+        wallCrud.save(wall);
     }
 
-    private void updateDrawingData(Drawing existingDrawing, Drawing newDrawing) {
-        existingDrawing.setColor(newDrawing.getColor());
-        existingDrawing.setDrag(newDrawing.getDrag());
-        existingDrawing.setSize(newDrawing.getSize());
-        existingDrawing.setX(newDrawing.getX());
-        existingDrawing.setY(newDrawing.getY());
+    private void updateDrawingData(Drawing drawing, Point point) {
+        drawing.getColor().add(point.color);
+        drawing.getDrag().add(point.drag);
+        drawing.getSize().add(point.size);
+        drawing.getX().add(point.x);
+        drawing.getY().add(point.y);
+        drawing.getTool().add(point.tool);
     }
 
     private Wall createWall(String wallId) {

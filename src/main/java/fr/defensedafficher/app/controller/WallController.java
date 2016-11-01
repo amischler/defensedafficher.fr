@@ -139,6 +139,17 @@ public class WallController extends DefaultController {
         return ok(wall).json();
     }
 
+    @Route(method = HttpMethod.GET, uri = "/api/walls/{wallId}/clear")
+    public Result clearWall(@Parameter("wallId") final String wallId) {
+        logger().info("Clear drawings for {}", wallId);
+        Wall wall = wallCrud.findOne(wallId);
+        if (wall != null) {
+            wall.getDrawings().clear();
+            wallCrud.save(wall);
+        }
+        return ok();
+    }
+
     @OnMessage("/draw/{wallId}")
     public void onAddPoint(@Parameter("wallId") final String wallId,
                            @Valid @Body final Point point) {

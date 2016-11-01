@@ -265,10 +265,14 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 			window.addEventListener("resize", resize, false);
 		},
 
-		resize = function () {
+		redrawAll = function() {
 		    clearRendering();
-		    updateTransformations();
-		    render();
+            updateTransformations();
+            render();
+		},
+
+		resize = function () {
+		    redrawAll();
 		},
 
 		clearRendering = function() {
@@ -276,10 +280,9 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		    rendering.drawings = [];
 		},
 
-		// Calls the render function after all neccessary resources are loaded.
+		// Calls the render function after all necessary resources are loaded.
 		resourceLoaded = function () {
-		    clearRendering();
-		    render();
+		    redrawAll();
 		},
 
 	    onopen = function(event) {
@@ -324,14 +327,17 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
         },
 
 		createSocket = function() {
+		    if (socket != null) {
+		        socket.close();
+		    }
 		    if (!window.WebSocket) {
                 window.WebSocket = window.MozWebSocket;
             }
             if (window.WebSocket) {
-            // Compute the web socket url.
-            // window.location.host includes the port
-            var url = "ws://" + window.location.host + '/draw/' + wallId;
-            socket = new WebSocket(url);
+                // Compute the web socket url.
+                // window.location.host includes the port
+                var url = "ws://" + window.location.host + '/draw/' + wallId;
+                socket = new WebSocket(url);
                 socket.onopen = onopen;
                 socket.onmessage = onmessage;
                 socket.onclose = onclose;
@@ -382,8 +388,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
                     drawing.name = Date.now();
                     createSocket();
                     wall.drawings.push(drawing);
-                    clearRendering();
-                    render();
+                    redrawAll();
                 }, function(status) { //error detection....
                     alert('Unable to load wall data.');
                 });

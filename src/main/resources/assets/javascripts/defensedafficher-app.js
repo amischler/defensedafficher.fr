@@ -46,6 +46,8 @@ var app = (function () {
             drawings: []
         },
         socket,
+        imageLoaded = false,
+        wallLoaded = false,
 
 		// Execute request and receive response as JSON
 		getJSON = function(url) {
@@ -266,9 +268,12 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		},
 
 		redrawAll = function() {
-		    clearRendering();
-            updateTransformations();
-            render();
+		    if (wallLoaded && imageLoaded) {
+		        showLoading(false);
+		        clearRendering();
+                updateTransformations();
+                render();
+		    }
 		},
 
 		resize = function () {
@@ -282,6 +287,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 
 		// Calls the render function after all necessary resources are loaded.
 		resourceLoaded = function () {
+		    imageLoaded = true;
 		    redrawAll();
 		},
 
@@ -350,6 +356,12 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
         	socket.send(JSON.stringify(point));
         },
 
+        showLoading = function(visible) {
+            console.log("Show loading : " + visible);
+            var img = document.getElementById("loading");
+            img.style.visibility = (visible ? 'visible' : 'hidden');
+        },
+
 		// Creates a canvas element, loads images, adds events, and draws the canvas for the first time.
 		init = function () {
 			// Create the canvas (Neccessary for IE because it doesn't know what a canvas element is)
@@ -374,6 +386,9 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 		},
 
 		loadImage = function() {
+		    showLoading(true);
+		    imageLoaded = false;
+		    wallLoaded = false;
 		    image.src = "assets/images/defensedafficher" + wallId + ".jpg";
         	getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId)
         	    .then(function(data) {
@@ -388,6 +403,7 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
                     drawing.name = Date.now();
                     createSocket();
                     wall.drawings.push(drawing);
+                    wallLoaded = true;
                     redrawAll();
                 }, function(status) { //error detection....
                     alert('Unable to load wall data.');

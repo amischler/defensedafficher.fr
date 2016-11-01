@@ -1,5 +1,5 @@
 {
-  "name": "repository-prod",
+  "name": "sample-repository-prod",
   "node-types": ["conf/types.cnd"],
   "storage": {
     "cacheConfiguration": "conf/infinispan-prod.xml",

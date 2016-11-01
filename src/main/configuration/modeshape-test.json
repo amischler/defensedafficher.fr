@@ -1,8 +1,0 @@
-{
-  "name": "repository-test",
-  "node-types": ["conf/types.cnd"],
-  "storage": {
-    "cacheConfiguration": "conf/infinispan-test.xml",
-    "cacheName": "persisted_repository"
-  }
-}

@@ -223,7 +223,7 @@ var app = (function () {
 			var press = function (e) {
 				// Mouse down location
 				var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
-mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
+                    mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 				paint = true;
 				addClick(mouseX, mouseY, false);
 				render();
@@ -242,8 +242,11 @@ mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetT
 				e.preventDefault();
 			},
 
-			release = function () {
+			release = function (e) {
+			    var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
+                    mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 				paint = false;
+				addClick(mouseX, mouseY, false);
 				render();
 			},
 

@@ -12,6 +12,10 @@ import org.wisdom.api.http.websockets.Publisher;
 import org.wisdom.api.model.Crud;
 
 import javax.validation.Valid;
+import java.lang.ref.WeakReference;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,7 +31,6 @@ public class WallController extends DefaultController {
 
         public Point(String name, int x, int y, String size, boolean drag, String color, String tool) {
             this.name = name;
-
             this.x = x;
             this.y = y;
             this.size = size;
@@ -106,6 +109,7 @@ public class WallController extends DefaultController {
             this.tool = tool;
         }
 
+
         @Override
         public String toString() {
             return "Point{" +
@@ -130,9 +134,36 @@ public class WallController extends DefaultController {
     @Model(Wall.class)
     private Crud<Wall, String> wallCrud;
 
+    /**
+     * Simple cache implementation. Lookup for the wall in the cache map. If not
+     * found the wall is loaded from the persistent layer and stored weakly in the map.
+     *
+     * @param wallId
+     * @return
+     */
+    private synchronized Wall findWall(@Parameter("wallId") String wallId) {
+        if (wallCache.containsKey(wallId)) {
+            WeakReference<Wall> wallReference = wallCache.get(wallId);
+            Wall wall = wallReference.get();
+            if (wall != null) {
+                return wall;
+            }
+        }
+        Wall wall = wallCrud.findOne(wallId);
+        if (wall != null) {
+            wallCache.put(wallId, new WeakReference<Wall>(wall));
+        }
+        return wall;
+    }
+
+    /**
+     * Map of weak references to walls for a simple cache implementation.
+     */
+    private Map<String, WeakReference<Wall>> wallCache = new HashMap<>();
+
     @Route(method = HttpMethod.GET, uri = "/api/walls/{wallId}")
     public Result getWall(@Parameter("wallId") final String wallId) {
-        Wall wall = wallCrud.findOne(wallId);
+        Wall wall = findWall(wallId);
         if (wall == null) {
             wall = createWall(wallId);
         }
@@ -142,7 +173,7 @@ public class WallController extends DefaultController {
     @Route(method = HttpMethod.GET, uri = "/api/walls/{wallId}/clear")
     public Result clearWall(@Parameter("wallId") final String wallId) {
         logger().info("Clear drawings for {}", wallId);
-        Wall wall = wallCrud.findOne(wallId);
+        Wall wall = findWall(wallId);
         if (wall != null) {
             wall.getDrawings().clear();
             wallCrud.save(wall);
@@ -153,8 +184,8 @@ public class WallController extends DefaultController {
     @OnMessage("/draw/{wallId}")
     public void onAddPoint(@Parameter("wallId") final String wallId,
                            @Valid @Body final Point point) {
-        logger().info("Point received for drawing {} : {}", point);
-        Wall wall = wallCrud.findOne(wallId);
+        logger().info(point.toString());
+        Wall wall = findWall(wallId);
         Optional<Drawing> existingDrawing = wall.getDrawings()
                 .stream()
                 .filter(d -> d.getName().equals(point.getName()))
@@ -164,12 +195,17 @@ public class WallController extends DefaultController {
         } else {
             logger().info("Drawing does not exist, adding new drawing to wall");
             Drawing drawing = new Drawing();
+            drawing.setDate(new Date());
             drawing.setName(point.getName());
             updateDrawingData(drawing, point);
             wall.getDrawings().add(drawing);
         }
         publisher.publish("/draw/" + wallId, json.toJson(point));
-        wallCrud.save(wall);
+        // end of current line, it's time to update persistence layer
+        if (!point.isDrag()) {
+            logger().info("Updating wall data.");
+            wallCrud.save(wall);
+        }
     }
 
     private void updateDrawingData(Drawing drawing, Point point) {

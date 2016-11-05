@@ -3,10 +3,9 @@ package fr.defensedafficher.app.model;
 import org.jcrom.AbstractJcrEntity;
 import org.jcrom.annotations.JcrNode;
 import org.jcrom.annotations.JcrProperty;
-import scala.Int;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,6 +31,9 @@ public class Drawing extends AbstractJcrEntity {
 
     @JcrProperty
     private List<String> tool = new ArrayList<>();
+
+    @JcrProperty
+    private Date date;
 
     public List<Integer> getX() {
         return x;
@@ -79,6 +81,14 @@ public class Drawing extends AbstractJcrEntity {
 
     public void setTool(List<String> tool) {
         this.tool = tool;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
 }

@@ -366,7 +366,7 @@ var app = (function () {
         },
 
 		// Creates a canvas element, loads images, adds events, and draws the canvas for the first time.
-		init = function () {
+		init = function (id) {
 			// Create the canvas (Neccessary for IE because it doesn't know what a canvas element is)
 			canvas = document.createElement('canvas');
 			canvas.setAttribute('width', canvasWidth);
@@ -382,7 +382,7 @@ var app = (function () {
 
 			// Load images
 			image.onload = resourceLoaded;
-			wallId = 1;
+			wallId = id;
 			loadImage();
 			createUserEvents();
 			resize();
@@ -393,6 +393,7 @@ var app = (function () {
 		    imageLoaded = false;
 		    wallLoaded = false;
 		    image.src = "assets/images/defensedafficher" + wallId + ".jpg";
+		    history.pushState(wallId, "", wallId);
         	getJSON('http://' + window.location.hostname + ':' + window.location.port + '/api/walls/' + wallId)
         	    .then(function(data) {
                     wall = data;
@@ -417,7 +418,7 @@ var app = (function () {
 		    if (wallId == 1) {
 		        wallId = 10;
 		    } else {
-		        wallId = wallId - 1;
+		        wallId = parseInt(wallId) - 1;
 		    }
             loadImage();
 		},
@@ -426,7 +427,7 @@ var app = (function () {
 		    if (wallId == 10) {
 		        wallId = 1;
 		    } else {
-		        wallId = wallId + 1;
+		        wallId = parseInt(wallId) + 1;
 		    }
 		    loadImage();
 		},

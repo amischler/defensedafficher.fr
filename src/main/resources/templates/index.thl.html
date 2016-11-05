@@ -27,8 +27,8 @@
 <!--[if IE]>
 <script type="text/javascript" src="/assets/javascripts/excanvas.js"></script><![endif]-->
 <script type="text/javascript" src="/assets/javascripts/defensedafficher-app.js"></script>
-<script type="text/javascript">
-    	 app.init();
+<script type="text/javascript" th:inline="javascript">
+    	 app.init([[${wallId}]]);
     	 var colorButtons = [];
     	 var configureColorButton = function(id, color) {
     	    var button = document.getElementById(id);
@@ -61,6 +61,9 @@
          configureSizeButton('normalButton', 'normal');
          configureSizeButton('largeButton', 'large');
          configureSizeButton('hugeButton', 'huge');
+         var next = function() {
+
+         };
 </script>
 </body>
 </html>

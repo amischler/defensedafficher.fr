@@ -10,14 +10,14 @@
     <div id="canvasDiv">
     </div>
     <div id="tools">
-        <button id="purpleButton" class="btn colorButton" type="button" onclick="app.setColor('#cb3594')"></button>
-        <button id="greenButton" class="btn colorButton" type="button" onclick="app.setColor('#659b41')"></button>
-        <button id="yellowButton" class="btn colorButton" type="button" onclick="app.setColor('#ffcf33')"></button>
-        <button id="brownButton" class="btn colorButton" type="button" onclick="app.setColor('#986928')"></button>
-        <button id="smallButton" class="btn sizeButton" type="button" onclick="app.setSize('small')"><span class="glyphicon glyphicon-tint tint-small"></span></button>
-        <button id="normalButton" class="btn sizeButton" type="button" onclick="app.setSize('normal')"><span class="glyphicon glyphicon-tint tint-normal"></span></button>
-        <button id="largeButton" class="btn sizeButton" type="button" onclick="app.setSize('large')"><span class="glyphicon glyphicon-tint tint-large"></span></button>
-        <button id="hugeButton" class="btn sizeButton" type="button" onclick="app.setSize('huge')"><span class="glyphicon glyphicon-tint "></span></button>
+        <button id="purpleButton" class="btn colorButton selected-white" type="button"></button>
+        <button id="greenButton" class="btn colorButton" type="button"></button>
+        <button id="yellowButton" class="btn colorButton" type="button"></button>
+        <button id="brownButton" class="btn colorButton" type="button"></button>
+        <button id="smallButton" class="btn sizeButton" type="button"><span class="glyphicon glyphicon-tint tint-small"></span></button>
+        <button id="normalButton" class="btn sizeButton selected-black" type="button"><span class="glyphicon glyphicon-tint tint-normal"></span></button>
+        <button id="largeButton" class="btn sizeButton" type="button"><span class="glyphicon glyphicon-tint tint-large"></span></button>
+        <button id="hugeButton" class="btn sizeButton" type="button"><span class="glyphicon glyphicon-tint "></span></button>
         <button type="button" class="btn" onclick="app.previous()"><span class="glyphicon glyphicon-step-backward"></span></button>
         <button type="button" class="btn" onclick="app.next()"><span class="glyphicon glyphicon-step-forward"></span></button>
         <img id="loading" src="/assets/images/ripple.svg" width="34" height="34"/>
@@ -29,6 +29,38 @@
 <script type="text/javascript" src="/assets/javascripts/defensedafficher-app.js"></script>
 <script type="text/javascript">
     	 app.init();
+    	 var colorButtons = [];
+    	 var configureColorButton = function(id, color) {
+    	    var button = document.getElementById(id);
+    	    colorButtons.push(button);
+            button.onclick = function() {
+                colorButtons.forEach(function(element) {
+                    element.classList.remove("selected-white");
+                });
+                button.classList.add("selected-white");
+                app.setColor(color);
+            };
+    	 };
+    	 configureColorButton('purpleButton', '#cb3594');
+    	 configureColorButton('greenButton', '#659b41');
+         configureColorButton('yellowButton', '#ffcf33');
+         configureColorButton('brownButton', '#986928');
+         var sizeButtons = [];
+         var configureSizeButton = function(id, size) {
+             var button = document.getElementById(id);
+             sizeButtons.push(button);
+             button.onclick = function() {
+                sizeButtons.forEach(function(element) {
+                    element.classList.remove("selected-black");
+                });
+                button.classList.add("selected-black");
+                app.setSize(size);
+             };
+         };
+         configureSizeButton('smallButton', 'small');
+         configureSizeButton('normalButton', 'normal');
+         configureSizeButton('largeButton', 'large');
+         configureSizeButton('hugeButton', 'huge');
 </script>
 </body>
 </html>

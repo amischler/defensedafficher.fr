@@ -58,3 +58,11 @@
 .tint-large {
     font-size: 12px;
 }
+
+.selected-white {
+    border: 2px solid white;
+}
+
+.selected-black {
+    border: 2px solid black;
+}

@@ -15,7 +15,7 @@
                             shared="false"
                             preload="false"
                             purge="false"
-                            path="target/persistent_repository/store"/>
+                            path="${user.home}/store"/>
             </persistence>
         </local-cache>
     </cache-container>
